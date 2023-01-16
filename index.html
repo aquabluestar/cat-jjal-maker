@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>고양이 가라사대</title>
+  </head>
+  <style>
+    body {
+      text-align: center;
+    }
+    .main-card button {
+      position: relative;
+      left: -45px;
+      bottom: 15px;
+    }
+    .favorites {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    /* .favorites img {
+      width: 150px;
+    } */
+  </style>
+  <body>
+
+    <div id="app"></div>
+    
+    
+
+    <!-- 리액트 라이브러리 실행 링크-->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!--  바벨 스크립트 링크 : html의 <> 꺽쇠 문법을 쓸 수 있게 하는-->
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <script type="text/babel">
+
+      const jsonLocalStorage = {
+        setItem: (key, value) => {
+          localStorage.setItem(key, JSON.stringify(value));
+        },
+        getItem: (key) => {
+          return JSON.parse(localStorage.getItem(key));
+        },
+      };
+
+      // const catItem =(
+      //   <li>
+      //     <img src="https://cataas.com/cat/HSENVDU4ZMqy7KQ0/says/react"/>
+      //   </li>
+      // )
+
+      // 3. 위의 변수를 리액트 컴포넌트 형으로 만들어줌, 그리고 props(인자)을 받는 컴퍼넌트형으로도 만듬
+      function CatItem(props){
+        return(
+          <li>
+            {props.title}
+            <img src={props.img} style={{width: '150px'}}/>
+          </li>
+        );
+      } 
+      
+      // 컴퍼넌트형으로 만듬
+      const H1 = (props) => {
+        return(
+          <h1>{props.children}</h1>
+        );
+      }
+
+      // 컴퍼넌트형으로 만듬
+      const Form = ({updateMainCat}) =>{// 상태와 handelFormSumit 함수를 부모쪽으로 옮겨서 props 객체문법을 가져옴
+        // 한글 검사 함수 만들기
+        const includesHangul = (text) => /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/i.test(text);
+        // input 상태 만들기
+        const [value, setValue] = React.useState('')
+        // 에러 메세지 상태 추가
+        const [errorMessage, setErrorMessage] = React.useState('')
+        function handleInputChange(e){
+          const userValue = e.target.value;
+          console.log(includesHangul(userValue));// includesHangul에 userValue가 포함이 되느냐?
+          setErrorMessage('') // 밑에 else 문 쓸 필요없이 초기화 해주고 시작하면 됨
+          if(includesHangul(userValue)) { //만일 한글이 있다면 ~
+            setErrorMessage('한글은 입력할 수 없습니다')
+          }
+          setValue(userValue.toUpperCase());// 이벤트(input의 onChange) 이것의 값을 대문자로의 상태조작
+        }
+
+        function handelFormSumit(e){
+          e.preventDefault()
+          setErrorMessage('')
+          if(value === ''){
+            setErrorMessage('빈값으로 만들 수 없습니다.')
+            return;
+          }
+          updateMainCat()
+        }
+        // 폼 제출 이벤트
+        return (
+          <form onSubmit={handelFormSumit}>
+            <input type="text" name="name" placeholder="영어 대사를 입력해주세요" onChange={handleInputChange} value={value}/>
+            <button type="submit">생성</button>
+            <p style={{color: 'red'}}>{errorMessage}</p>
+          </form>
+        );
+      };
+      
+      // 같은 html요소가 있다면 {}안에 변수명을 써주면됨, 연산도됨 ,변수를  넣음, 삼항연산자, 함수도 가능
+      // 위의 중괄호에 변수로 들어 갔던 부분을 리액트형 컴포넌트로 만들어 놓은것(CatItem)을 HTML 태그형으로 씀
+      // const favorites = (
+      //   <ul className="favorites">
+      //     <CatItem img='https://cataas.com/cat/BxqL2EjFmtxDkAm2/says/inflearn' title='cat1'/>
+      //     <CatItem img='https://cataas.com/cat/18MD6byVC1yKGpXp/says/JavaScript'/>
+      //   </ul> 
+      // )
+
+      //위의 변수형을 컴포넌트형으로 만듬
+      function Favorites({favorites}){// 상태도 배열로 되어 있기때문에 props으로 받아도 됨
+
+        // 아래의 CatItem들을 {}에 JSX문법을 써서 .map()메서드로 만들어줌
+        // <CatItem img='https://cataas.com/cat/BxqL2EjFmtxDkAm2/says/inflearn' title='cat1'/>
+        // <CatItem img='https://cataas.com/cat/18MD6byVC1yKGpXp/says/JavaScript'/>
+        
+        return (
+          <ul className="favorites">
+            {favorites.map((cat) =>(
+              <CatItem img={cat} key={cat} />
+            ))}
+          </ul>
+        ); // cat은 인자명
+      }
+      
+      // const maincard = (
+      //   <div className="main-card">
+      //     <img
+      //       src="https://cataas.com/cat/HSENVDU4ZMqy7KQ0/says/react"
+      //       alt="고양이"
+      //       width="400"
+      //     />
+      //     <button>🤍</button>
+      //   </div>
+      // )
+
+      // 위의변수형을 화살표 함수 방식의 컴퍼넌트로 만듬
+      // props를 안쓰고 object형으로 바로 받을 수 도 있음
+      const MianCard = ({ img, onHeartClick}) => {
+        // 하트 눌렀을때 콘솔에 '하트 눌렀음'이라 출력되게 함수
+        
+        return (
+          <div className="main-card">
+            <img
+              src={img}
+              alt="고양이"
+              width="400"
+            />
+            <button onClick={onHeartClick}>🤍</button>
+          </div>
+        ) // button에 onClcik되었을때 handleHeartClick을 호출
+      }
+
+      // 1. 두개를 묶을때에는 최상위 태그가 하나여야만함, 이럴때는 <div>로 묶어줌, 최종으로 컴퍼넌트형을 태그 안에 넣음
+      const App = () =>{
+        const CAT1 = "https://cataas.com/cat/HSENVDU4ZMqy7KQ0/says/react";
+        const CAT2 = "https://cataas.com/cat/BxqL2EjFmtxDkAm2/says/inflearn";
+        const CAT3 = "https://cataas.com/cat/18MD6byVC1yKGpXp/says/JavaScript";
+
+        const cats = [CAT1, CAT2, CAT3]
+         // 원하는 값이 변하는 상태 만들기 React.useState
+        const [counter, setCounter] = React.useState(jsonLocalStorage.getItem('counter')) // 밑의 두가지 축약하여, (로컬스토리지의 저장값 상태)
+        // const counter = counterState[0] // counterState 자체의 수
+        // const setCounter = counterState[1] // counterState 상태를 조작하는 함수
+
+        // 전송(생성)을 누르면 고양이 사진을 바꾸는 상태만들기
+        const [mainCat, setMainCat] = React.useState(CAT3)
+        // 고양이 좋아요(하트) 상태 만들기
+        const [favorites, setFavorites] = React.useState(jsonLocalStorage.getItem('favorites') || []) // 로컬스토리지에 favorites가 value값이 없을때 나는 에러 해결로 ||(또는) [](빈배열)로 초기화 해줌
+        // 전송 이밴트
+        function updateMainCat(){
+          setMainCat(CAT2)
+          const nextCounter = counter + 1
+          setCounter(nextCounter)
+          jsonLocalStorage.setItem('counter', nextCounter)
+        }
+        // 하트클릭 이벤트
+        // 메인카드에서 가져온것임
+        function handleHeartClick(){
+          const nextFavorites = [...favorites, mainCat]
+          setFavorites(nextFavorites)
+          jsonLocalStorage.setItem('favorites', nextFavorites)
+        }
+        return( // counter 자체의 수가 브라우저에서 변하는것임
+          <div>
+            <H1>{counter}번째 고양이 가라사대</H1>
+            <Form updateMainCat= {updateMainCat}/>
+            <MianCard img={mainCat} onHeartClick={handleHeartClick}/>
+            <Favorites favorites={favorites}/>
+          </div>
+        )// H1의 컴퍼넌트 재사용을 위해 ~컴퍼넌트명을 태그안에넣고 내용을 써주면 내용이 children이란 object name으로 들어옴, 그래서 컴퍼넌트 가서 내용을  props.children이라 써주면됨
+        // handelFormSumit,handleHeartClick은 컴퍼넌트에가서 props으로 넘겨주야 하기때문에
+      }
+      const 여기다가그려 = document.querySelector('#app')
+
+      ReactDOM.render(<App />, 여기다가그려) // 2. app이란 리액트형 변수를 '여기다가그려' 요소에 그려라
+
+    
+        
+    </script>
+
+  </body>
+</html>
